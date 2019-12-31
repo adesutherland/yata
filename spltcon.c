@@ -7,6 +7,10 @@
 /*             on d drive (default A)                                  */
 /*                                                                     */
 /***********************************************************************/
+#ifdef _WIN32
+#define _CRT_SECURE_NO_WARNINGS
+#endif
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -28,34 +32,52 @@ int tolower(int c);
 #else
 
 #define HELPTEXT "\nsplit|concat [D], where D (default is . [i.e. current]) is the directory\n"
+
+#ifdef _WIN32
+
+#define SPLIT "split.exe"
+#define CONCAT "concat.exe"
+#include <windows.h>
+
+#else
+
 #define SPLIT "split"
 #define CONCAT "concat"
-
 #include <dirent.h>
 #include <libgen.h>
+
+#endif
+
 #include <ctype.h>
 #define CONCATFILE "spltcon.txt"
 char* includeTypes[] = { "c", "h", "exec", "assemble", "listing" };
 
 #endif
 
-
 int concat(void);
 int split(void);
-char* getFileName(char *listFileLine);
+char* validateFileName(char *listFileLine);
 char* toStoredName(char *fileName);
 char* fromStoredName(char *fileName);
 
 char* drive;
+
+#ifdef _WIN32
+char* basename(char* path)
+{
+    char* base = strrchr(path, '\\');
+    return base ? base + 1 : path;
+}
+#endif
 
 int main(int argc, char * argv[]) {
   char* name;
   int error = 0;
 
 #ifdef __CMS
-    name = argv[0];
+  name = argv[0];
 #else
-    name = basename(argv[0]);
+  name = basename(argv[0]);
 #endif
 
   if (argc>2) {
@@ -96,27 +118,41 @@ int concat(void) {
   int files;
   char consoleLine[131];
 #else
+#ifdef _WIN32
+  WIN32_FIND_DATA fdFile;
+  HANDLE hFind = NULL;
+#else
   DIR *d;
   struct dirent *dir;
 #endif
-  int i, n;
+#endif
   char* fileName;
   FILE* inFile;
   FILE* outFile;
   char lineBuffer[MAXRECL];
-  char command[40];
 
   outFile = fopen(CONCATFILE, "w");
 
 #ifdef __CMS
-
+  int i;
+  char command[40];
   stackSize = CMSstackQuery();
   sprintf(command, "LISTFILE * * %s (FORMAT STACK", drive);
   CMScommand(command, CMS_COMMAND);
   files = CMSstackQuery() - stackSize;
   for (i=0; i<files; i++) {
     if (CMSconsoleRead(consoleLine)) {
-      fileName = getFileName(consoleLine);
+      fileName = validateFileName(consoleLine);
+#else
+
+#ifdef _WIN32
+
+  hFind = FindFirstFile(drive, &fdFile);
+  if (hFind) {
+    char dirAndName[260];
+    do {  
+      snprintf(dirAndName, 259, "%s/%s", drive, fdFile.cFileName);
+      fileName = validateFileName(dirAndName);
 
 #else
 
@@ -125,8 +161,9 @@ int concat(void) {
     char dirAndName[260];
     while ((dir = readdir(d)) != NULL) {
       snprintf(dirAndName, 259, "%s/%s", drive, dir->d_name);
-      fileName = getFileName(dirAndName);
+      fileName = validateFileName(dirAndName);
 
+#endif
 #endif
 
       if (fileName) {
@@ -142,11 +179,18 @@ int concat(void) {
         fclose(inFile);
       }
     }
+#ifdef _WIN32
+    while (FindNextFile(hFind, &fdFile));
+#endif
+    FindClose(hFind);
   }
 
 #ifdef __CMS
 #else
+#ifdef _WIN32
+#else
   closedir(d);
+#endif
 #endif
 
   fclose(outFile);
@@ -154,10 +198,12 @@ int concat(void) {
   return 0;
 }
 
-char* getFileName(char *listFileLine) {
+char* validateFileName(char *listFileLine) {
   int i;
+  /* TODO Check if the file is not a directory */
 
 #ifdef __CMS
+
   int recl;
   char trimmedFileType[9];
 
@@ -177,10 +223,11 @@ char* getFileName(char *listFileLine) {
   trimmedFileType[i-9] = 0;
 
 #else
+
   char buffer[100];
   strncpy(buffer, listFileLine, 100);
   buffer[99]=0;
-  strtok(buffer, ".");
+  (void)strtok(buffer, ".");
   char *trimmedFileType = strtok(NULL, " .");
   if (trimmedFileType == NULL) return NULL;
 
@@ -199,7 +246,6 @@ char* getFileName(char *listFileLine) {
 }
 
 int split(void) {
-  int i, n;
   char* fileName;
   FILE* inFile;
   FILE* outFile = NULL;
