@@ -35,18 +35,17 @@ int tolower(int c);
 
 #ifdef _WIN32
 
-#define SPLIT "split.exe"
-#define CONCAT "concat.exe"
 #include <windows.h>
 
 #else
 
-#define SPLIT "split"
-#define CONCAT "concat"
 #include <dirent.h>
 #include <libgen.h>
 
 #endif
+
+#define SPLIT "split"
+#define CONCAT "concat"
 
 #include <ctype.h>
 #define CONCATFILE "spltcon.txt"
@@ -78,6 +77,7 @@ int main(int argc, char * argv[]) {
   name = argv[0];
 #else
   name = basename(argv[0]);
+  name = strtok(name, ".");
 #endif
 
   if (argc>2) {
@@ -147,15 +147,15 @@ int concat(void) {
 
 #ifdef _WIN32
 
-  hFind = FindFirstFile(drive, &fdFile);
-  if (hFind) {
-    char dirAndName[260];
+ char dirAndName[260];
+ snprintf(dirAndName, 259, "%s\\*.*", drive);
+ hFind = FindFirstFile(dirAndName, &fdFile);
+  if (hFind != INVALID_HANDLE_VALUE) {
     do {  
-      snprintf(dirAndName, 259, "%s/%s", drive, fdFile.cFileName);
+      snprintf(dirAndName, 259, "%s\\%s", drive, fdFile.cFileName);
       fileName = validateFileName(dirAndName);
 
 #else
-
   d = opendir(drive);
   if (d)  {
     char dirAndName[260];
@@ -180,8 +180,10 @@ int concat(void) {
       }
     }
 #ifdef _WIN32
-    while (FindNextFile(hFind, &fdFile));
+    while (FindNextFile(hFind, &fdFile) != 0);
+
 #endif
+
     FindClose(hFind);
   }
 
