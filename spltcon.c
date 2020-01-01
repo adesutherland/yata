@@ -151,7 +151,7 @@ int concat(void) {
  snprintf(dirAndName, 259, "%s\\*.*", drive);
  hFind = FindFirstFile(dirAndName, &fdFile);
   if (hFind != INVALID_HANDLE_VALUE) {
-    do {  
+    do {
       snprintf(dirAndName, 259, "%s\\%s", drive, fdFile.cFileName);
       fileName = validateFileName(dirAndName);
 
@@ -181,10 +181,8 @@ int concat(void) {
     }
 #ifdef _WIN32
     while (FindNextFile(hFind, &fdFile) != 0);
-
-#endif
-
     FindClose(hFind);
+#endif
   }
 
 #ifdef __CMS
@@ -279,7 +277,18 @@ int split(void) {
           fclose(inFile);
           return -1;
         }
+#ifdef __CMS
+        /* This is a work around for a bug in CMSSYS where it does
+           not like writing a line with just a \n */
+        if (strlen(lineBuffer)>2) {
+          fputs(lineBuffer+1, outFile);
+        }
+        else {
+          fputs(" \n", outFile);
+        }
+#else
         fputs(lineBuffer+1, outFile);
+#endif
         break;
 
       default:
