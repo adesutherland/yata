@@ -10,60 +10,60 @@
 #ifdef _WIN32
 #define _CRT_SECURE_NO_WARNINGS
 #endif
- 
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
- 
+
 #define MAXRECL 800
- 
+
 #ifdef __CMS
- 
+
 #define HELPTEXT "\nSPLIT|CONCAT [D], where D (default=A) is the disk\n"
 #define SPLIT "SPLIT"
 #define CONCAT "CONCAT"
- 
+
 #include <cmssys.h>
 #define CONCATFILE "SPLIT CONCAT A1"
 char* includeTypes[] = { "C", "H", "EXEC", "ASSEMBLE", "LISTING", "COPY", "MACLIB",
                          "MACRO", "PARM"};
 int toupper(int c);
 int tolower(int c);
- 
+
 #else
- 
+
 #define HELPTEXT "\nsplit|concat [D], where D (default is . [i.e. current]) is the directory\n"
- 
+
 #ifdef _WIN32
- 
+
 #include <windows.h>
- 
+
 #else
- 
+
 #include <dirent.h>
 #include <libgen.h>
- 
+
 #endif
- 
+
 #define SPLIT "split"
 #define CONCAT "concat"
- 
+
 #include <ctype.h>
 #define CONCATFILE "spltcon.txt"
 char* includeTypes[] = { "c", "h", "exec", "assemble", "listing", "copy", "maclib",
                          "macro", "parm"};
- 
+
 #endif
- 
+
 int concat(void);
 int split(void);
 char* validateFileName(char *listFileLine);
 char* toStoredName(char *fileName);
 char* fromStoredName(char *fileName);
 char *trimTrailingSpace(char *str);
- 
+
 char* drive;
- 
+
 #ifdef _WIN32
 char* basename(char* path)
 {
@@ -71,18 +71,18 @@ char* basename(char* path)
     return base ? base + 1 : path;
 }
 #endif
- 
+
 int main(int argc, char * argv[]) {
   char* name;
   int error = 0;
- 
+
 #ifdef __CMS
   name = argv[0];
 #else
   name = basename(argv[0]);
   name = strtok(name, ".");
 #endif
- 
+
   if (argc>2) {
     error = 1;
     printf("ERROR: Too many arguments\n");
@@ -103,7 +103,7 @@ int main(int argc, char * argv[]) {
     drive = ".";
 #endif
   }
- 
+
   if (!strcmp(name,SPLIT)) {
     if (!error) return split();
   }
@@ -114,7 +114,7 @@ int main(int argc, char * argv[]) {
   printf(HELPTEXT);
   return -1;
 }
- 
+
 int concat(void) {
 #ifdef __CMS
   int stackSize;
@@ -133,9 +133,9 @@ int concat(void) {
   FILE* inFile;
   FILE* outFile;
   char lineBuffer[MAXRECL];
- 
+
   outFile = fopen(CONCATFILE, "w");
- 
+
 #ifdef __CMS
   int i;
   char command[40];
@@ -147,9 +147,9 @@ int concat(void) {
     if (CMSconsoleRead(consoleLine)) {
       fileName = validateFileName(consoleLine);
 #else
- 
+
 #ifdef _WIN32
- 
+
  char dirAndName[260];
  snprintf(dirAndName, 259, "%s\\*.*", drive);
  hFind = FindFirstFile(dirAndName, &fdFile);
@@ -157,7 +157,7 @@ int concat(void) {
     do {
       snprintf(dirAndName, 259, "%s\\%s", drive, fdFile.cFileName);
       fileName = validateFileName(dirAndName);
- 
+
 #else
   d = opendir(drive);
   if (d)  {
@@ -165,10 +165,10 @@ int concat(void) {
     while ((dir = readdir(d)) != NULL) {
       snprintf(dirAndName, 259, "%s/%s", drive, dir->d_name);
       fileName = validateFileName(dirAndName);
- 
+
 #endif
 #endif
- 
+
       if (fileName) {
         inFile = fopen(fileName,"r");
         if (inFile==NULL) {
@@ -176,7 +176,7 @@ int concat(void) {
           return -1;
         }
         fprintf(outFile, "+%s\n", toStoredName(fileName));
- 
+
         while (fgets(lineBuffer, MAXRECL , inFile) != NULL) {
           trimTrailingSpace(lineBuffer);
           fprintf(outFile, ">%s\n", lineBuffer);
@@ -189,7 +189,7 @@ int concat(void) {
     FindClose(hFind);
 #endif
   }
- 
+
 #ifdef __CMS
 #else
 #ifdef _WIN32
@@ -197,38 +197,38 @@ int concat(void) {
   closedir(d);
 #endif
 #endif
- 
+
   fclose(outFile);
- 
+
   return 0;
 }
- 
+
 char* validateFileName(char *listFileLine) {
   int i;
   /* TODO Check if the file is not a directory */
- 
+
 #ifdef __CMS
- 
+
   int recl;
   char trimmedFileType[9];
- 
+
   listFileLine[20] = 0;   /* 20 is the end of the file mode */
- 
+
   /* If the file record length is too long skip */
   listFileLine[29] = 0;
   recl  = atoi(listFileLine+24);
   if (recl>MAXRECL) {
    return NULL;
   }
- 
+
   /* position 9 is where the file type starts */
   for (i=9; listFileLine[i] && listFileLine[i]!=' '; i++) {
     trimmedFileType[i-9] = listFileLine[i];
   }
   trimmedFileType[i-9] = 0;
- 
+
 #else
- 
+
   char buffer[100];
   strncpy(buffer, listFileLine, 100);
   buffer[99]=0;
@@ -238,12 +238,12 @@ char* validateFileName(char *listFileLine) {
     printf("WARNING: file %s skipped\n", listFileLine);
     return NULL;
   }
- 
+
 #endif
- 
+
   /* Only process if the file is one of the included types */
   int noTypes = sizeof(includeTypes) / sizeof(includeTypes[0]);
- 
+
   for (i=0; i<noTypes; ++i)
   {
     if (!strcmp(includeTypes[i], trimmedFileType)) {
@@ -253,13 +253,13 @@ char* validateFileName(char *listFileLine) {
   printf("WARNING: file %s skipped\n", listFileLine);
   return NULL;
 }
- 
+
 int split(void) {
   char* fileName;
   FILE* inFile;
   FILE* outFile = NULL;
   char lineBuffer[MAXRECL];
- 
+
   inFile = fopen(CONCATFILE, "r");
   if (inFile==NULL) {
     printf("ERROR: Error opening file %s\n", CONCATFILE);
@@ -279,7 +279,7 @@ int split(void) {
           return -1;
         }
         break;
- 
+
       case '>':
         if (!outFile) {
           printf("ERROR: Output file not specified on CONCAT file");
@@ -300,7 +300,7 @@ int split(void) {
         fprintf(outFile, "%s\n", lineBuffer+1);
 #endif
         break;
- 
+
       default:
         if (outFile) {
           fclose(outFile);
@@ -316,16 +316,16 @@ int split(void) {
   fclose(inFile);
   return 0;
 }
- 
+
 char* toStoredName(char *fileName) {
 #ifdef __CMS
- static char name[18];
+ static char name[25];
  int i;
  char *fn;
  char *ft;
  fn = strtok(fileName, " ");
  ft = strtok(NULL, " ");
- 
+
  sprintf(name, "%s.%s",fn,ft);
  for (i=0; name[i]; i++) name[i] = tolower(name[i]);
  return name;
@@ -333,18 +333,23 @@ char* toStoredName(char *fileName) {
  return basename(fileName);
 #endif
 }
- 
+
 char* fromStoredName(char *fileName) {
 #ifdef __CMS
- static char name[18];
+ static char name[25];
  int i;
- char *fn;
+ char *fn = fileName;
  char *ft;
- fn = strtok(fileName, ".");
- ft = strtok(NULL, " \n.");
+
+ for (ft=fn; *ft; ft++) if (*ft=='.') {
+   *ft=0; ft++;
+   break;
+ }
+ TrimTrailingSpace(ft);
+
  if (strlen(fn) > 8) fn[8]=0;
  if (strlen(ft) > 8) ft[8]=0;
- 
+
  sprintf(name, "%s %s %s", fn, ft, drive);
  for (i=0; name[i]; i++) name[i] = toupper(name[i]);
  return name;
@@ -355,40 +360,40 @@ char* fromStoredName(char *fileName) {
  return name;
 #endif
 }
- 
- 
+
+
 char *trimTrailingSpace(char *str)
 {
   char *end;
- 
+
   end = str + strlen(str) - 1;
   while ( end >= str &&
           ( *end == ' ' || *end == '\n' || *end == '\t')
         ) end--;
- 
+
   /* Terminate */
   end[1] = 0;
- 
+
   return str;
 }
- 
+
 #ifdef __CMS
- 
+
 static const unsigned char lower[] = "abcdefghijklmnopqrstuvwxyz";
 static const unsigned char upper[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
- 
+
 int toupper(int c) {
   unsigned char *p;
   p=strchr(lower,c);
   if (p) return upper[p-lower];
   return c;
 }
- 
+
 int tolower(int c) {
   unsigned char *p;
   p=strchr(upper,c);
   if (p) return lower[p-upper];
   return c;
 }
- 
+
 #endif
