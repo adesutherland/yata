@@ -60,6 +60,7 @@ int split(void);
 char* validateFileName(char *listFileLine);
 char* toStoredName(char *fileName);
 char* fromStoredName(char *fileName);
+char *trimTrailingSpace(char *str);
  
 char* drive;
  
@@ -171,12 +172,14 @@ int concat(void) {
       if (fileName) {
         inFile = fopen(fileName,"r");
         if (inFile==NULL) {
+          printf("ERROR: Can not open file %s\n", fileName);
           return -1;
         }
         fprintf(outFile, "+%s\n", toStoredName(fileName));
  
         while (fgets(lineBuffer, MAXRECL , inFile) != NULL) {
-          fprintf(outFile, ">%s", lineBuffer);
+          trimTrailingSpace(lineBuffer);
+          fprintf(outFile, ">%s\n", lineBuffer);
         }
         fclose(inFile);
       }
@@ -283,17 +286,18 @@ int split(void) {
           fclose(inFile);
           return -1;
         }
+        trimTrailingSpace(lineBuffer);
 #ifdef __CMS
         /* This is a work around for a bug in CMSSYS where it does
            not like writing a line with just a \n */
         if (strlen(lineBuffer)>2) {
-          fputs(lineBuffer+1, outFile);
+          fprintf(outFile, "%s\n", lineBuffer+1);
         }
         else {
-          fputs(" \n", outFile);
+          fputs(" \n", outFile); /* Have to add a space :-( */
         }
 #else
-        fputs(lineBuffer+1, outFile);
+        fprintf(outFile, "%s\n", lineBuffer+1);
 #endif
         break;
  
@@ -350,6 +354,22 @@ char* fromStoredName(char *fileName) {
  snprintf(name, 99, "%s/%s", drive, fileName);
  return name;
 #endif
+}
+ 
+ 
+char *trimTrailingSpace(char *str)
+{
+  char *end;
+ 
+  end = str + strlen(str) - 1;
+  while ( end >= str &&
+          ( *end == ' ' || *end == '\n' || *end == '\t')
+        ) end--;
+ 
+  /* Terminate */
+  end[1] = 0;
+ 
+  return str;
 }
  
 #ifdef __CMS
