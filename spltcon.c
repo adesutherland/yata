@@ -75,6 +75,7 @@ char* basename(char* path)
 int main(int argc, char * argv[]) {
   char* name;
   int error = 0;
+  printf("SPLTCON VERSION 1.0.1\n");
 
 #ifdef __CMS
   name = argv[0];
@@ -290,7 +291,7 @@ int split(void) {
 #ifdef __CMS
         /* This is a work around for a bug in CMSSYS where it does
            not like writing a line with just a \n */
-        if (strlen(lineBuffer)>2) {
+        if (strlen(lineBuffer) > 1) {
           fprintf(outFile, "%s\n", lineBuffer+1);
         }
         else {
