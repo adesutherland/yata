@@ -1,0 +1,9 @@
+YATA - Yey Another Text Archive
+===============================
+Adrian Sutherland - adrian@sutherlandonline.org
+
+History 
+
+F0001 - Autobuild
+
+< 1.0.2 - Called Spltcon - Prehistory versions!
