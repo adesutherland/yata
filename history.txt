@@ -4,6 +4,7 @@ Adrian Sutherland - adrian@sutherlandonline.org
 
 History 
 
+F0002 - Automate CMS Build
 F0001 - Autobuild
 
 < 1.0.2 - Called Spltcon - Prehistory versions!

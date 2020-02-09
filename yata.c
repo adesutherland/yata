@@ -15,12 +15,13 @@
 #include <string.h>
 
 #define MAXRECL 800
-#define VERSION "F0001"
+#define VERSION "F0002"
 
 #ifdef __CMS
 
 #include <cmssys.h>
-char* includeTypes[] = { "C", "H", "EXEC", "ASSEMBLE", "LISTING", "COPY", "MACLIB",
+char* includeTypes[] = { "C", "H", "EXEC", "ASSEMBLE", "LISTING", 
+              "COPY", "MACLIB",
              "MACRO", "PARM", "MEMO" };
 #define ARCHIVE "YATA TXT A1"
 #define DRIVE "A"
@@ -41,7 +42,8 @@ int tolower(int c);
 #endif
 
 #include <ctype.h>
-char* includeTypes[] = { "c", "h", "exec", "assemble", "listing", "copy", "maclib",
+char* includeTypes[] = { "c", "h", "exec", "assemble", "listing",
+              "copy", "maclib",
              "macro", "parm", "memo" };
 #define ARCHIVE "yata.txt"
 #define DRIVE "."
@@ -70,7 +72,8 @@ char* archive_file;
 
 void help() {
   char* helpMessage =
-    "yata (Yet Another Text Archive); Lightweight tool to archive text files\n"
+    "yata (Yet Another Text Archive) - "
+    "Lightweight tool to archive text files\n"
     "Version :   " VERSION "\n"
     "Usage   :   yata [options]\n"
     "Options :\n"
@@ -78,7 +81,8 @@ void help() {
     "  -v        Prints Version\n"
     "  -x        Extract from Archive\n"
     "  -c        Create Archive\n"
-    "  -d TEXT   Drive or Directory of files (default: A in CMS, . in Windows/Linux)\n"
+    "  -d TEXT   Drive or Directory of files (default: A in CMS,"
+    " . in Windows/Linux)\n"
     "  -f TEXT   Archive file (default: yata.txt)\n";
 
 #ifdef __CMS
@@ -87,7 +91,7 @@ void help() {
   printf(helpMessage);
 }
 
-void error_and_exit(int rc, const char* message) {
+void error_and_exit(int rc, char* message) {
 
 #ifdef __CMS
   message = toUpperString(message);
@@ -424,7 +428,8 @@ char* trimTrailingSpace(char* str)
 }
 
 char* toUpperString(char* string) {
-  for (int i = 0; string[i]; i++) string[i] = toupper(string[i]);
+  int i;
+  for (i = 0; string[i]; i++) string[i] = toupper(string[i]);
   return string;
 }
 
