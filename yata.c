@@ -17,7 +17,7 @@
 
 #define MAXRECL 800
 #define ARCLINELEN 80
-#define VERSION "F0003"
+#define VERSION "1.1.0"
 
 #ifdef __CMS
 

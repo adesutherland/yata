@@ -4,6 +4,7 @@ Adrian Sutherland - adrian@sutherlandonline.org
 
 History 
 
+1.1.0 - 11 Feb 2020
 F0003 - Keep archive line length <=80 characters
 F0002 - Automate CMS Build
 F0001 - Autobuild (Windows and Ubuntu)
