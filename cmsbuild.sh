@@ -16,7 +16,7 @@ herccontrol "/" -w "^Ready;"
 
 # Read MAKE EXEC
 herccontrol -m >tmp; read mark <tmp; rm tmp
-echo "USERID  CMSUSER\n:READ  MAKE     EXEC    \n" > tmp
+echo "USERID  CMSUSER\n:READ  MAKE     EXEC    " > tmp
 cat make.exec >> tmp
 netcat -q 0 localhost 3505 < tmp
 rm tmp
@@ -26,8 +26,18 @@ herccontrol "/read *" -w "^Ready;"
 
 # Read YATA C
 herccontrol -m >tmp; read mark <tmp; rm tmp
-echo "USERID  CMSUSER\n:READ  YATA     C       \n" > tmp
+echo "USERID  CMSUSER\n:READ  YATA     C       " > tmp
 cat yata.c >> tmp
+netcat -q 0 localhost 3505 < tmp
+rm tmp
+herccontrol -w "HHCRD012I" -f $mark 
+herccontrol "/" -w "RDR FILE"
+herccontrol "/read *" -w "^Ready;"
+
+# Read YATA TXT (for testing)
+herccontrol -m >tmp; read mark <tmp; rm tmp
+echo "USERID  CMSUSER\n:READ  YATA     TXT     " > tmp
+cat test/yata.txt >> tmp
 netcat -q 0 localhost 3505 < tmp
 rm tmp
 herccontrol -w "HHCRD012I" -f $mark 
@@ -36,6 +46,10 @@ herccontrol "/read *" -w "^Ready;"
 
 # Build
 herccontrol "/make" -w "^Ready;"
+
+# Sanity test
+herccontrol "/yata -x" -w "^Ready;"
+herccontrol "/listf test* exec a" -w "^Ready;"
 
 # Make and load Tape
 herccontrol "/cp disc" -w "^VM/370 Online"

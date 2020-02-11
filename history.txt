@@ -1,10 +1,11 @@
-YATA - Yey Another Text Archive
-===============================
+YATA - Yay! Another Text Archive
+================================
 Adrian Sutherland - adrian@sutherlandonline.org
 
 History 
 
+F0003 - Keep archive line length <=80 characters
 F0002 - Automate CMS Build
-F0001 - Autobuild
+F0001 - Autobuild (Windows and Ubuntu)
 
 < 1.0.2 - Called Spltcon - Prehistory versions!

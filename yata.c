@@ -1,11 +1,12 @@
 /***********************************************************************/
 /*                                                                     */
 /* YATA.C                                                              */
-/* Yet Another Text Archive. Lightweight tool to archive text files    */
+/* Yay! Another Text Archive. Lightweight tool to archive text files   */
 /*                                                                     */
 /* Adrian Sutherland                                                   */
 /*                                                                     */
 /***********************************************************************/
+
 #ifdef _WIN32
 #define _CRT_SECURE_NO_WARNINGS
 #endif
@@ -15,18 +16,22 @@
 #include <string.h>
 
 #define MAXRECL 800
-#define VERSION "F0002"
+#define ARCLINELEN 80
+#define VERSION "F0003"
 
 #ifdef __CMS
 
 #include <cmssys.h>
-char* includeTypes[] = { "C", "H", "EXEC", "ASSEMBLE", "LISTING", 
+static char* includeTypes[] = { "C", "H", "EXEC", "ASSEMBLE", "LISTING", 
               "COPY", "MACLIB",
              "MACRO", "PARM", "MEMO" };
 #define ARCHIVE "YATA TXT A1"
 #define DRIVE "A"
-int toupper(int c);
-int tolower(int c);
+static int toupper(int c);
+static int tolower(int c);
+
+#define FILENAMELEN 25
+static char fileNameBuffer[FILENAMELEN];
 
 #else
 
@@ -42,7 +47,7 @@ int tolower(int c);
 #endif
 
 #include <ctype.h>
-char* includeTypes[] = { "c", "h", "exec", "assemble", "listing",
+static char* includeTypes[] = { "c", "h", "exec", "assemble", "listing",
               "copy", "maclib",
              "macro", "parm", "memo" };
 #define ARCHIVE "yata.txt"
@@ -50,29 +55,31 @@ char* includeTypes[] = { "c", "h", "exec", "assemble", "listing",
 
 #endif
 
-char* toUpperString(char* string);
-int create_archive();
-int extract_archive();
-char* validateFileName(char* listFileLine);
-char* getFileName(char* listFileLine);
-char* toStoredName(char* fileName);
-char* fromStoredName(char* fileName);
-char* trimTrailingSpace(char* str);
+static char* toUpperString(char* string);
+static int create_archive();
+static int extract_archive();
+static char* validateFileName(char* listFileLine);
+static char* getFileName(char* listFileLine);
+static char* toStoredName(char* fileName);
+static char* fromStoredName(char* fileName);
+static char* trimTrailingSpace(char* str);
+static char* trimTrailingNL(char* str);
+
 
 #ifdef _WIN32
-char* basename(char* path)
+static char* basename(char* path)
 {
   char* base = strrchr(path, '\\');
   return base ? base + 1 : path;
 }
 #endif
 
-char* drive;
-char* archive_file;
+static char* drive;
+static char* archive_file;
 
-void help() {
+static void help() {
   char* helpMessage =
-    "yata (Yet Another Text Archive) - "
+    "YATA (Yay! Another Text Archive) - "
     "Lightweight tool to archive text files\n"
     "Version :   " VERSION "\n"
     "Usage   :   yata [options]\n"
@@ -91,7 +98,7 @@ void help() {
   printf(helpMessage);
 }
 
-void error_and_exit(int rc, char* message) {
+static void error_and_exit(int rc, char* message) {
 
 #ifdef __CMS
   message = toUpperString(message);
@@ -104,12 +111,15 @@ void error_and_exit(int rc, char* message) {
 
 int main(int argc, char* argv[]) {
   int extract_mode = -1;
+  int i;
   drive = DRIVE;
   archive_file = ARCHIVE;
-  int i;
 
   /* Parse arguments - DIY style! */
   for (i = 1; i < argc && argv[i][0] == '-'; i++) {
+    if (strlen(argv[i]) > 2) {
+      error_and_exit(2, "Invalid argument");
+    }
     switch (toupper((argv[i][1]))) {
     case '-':
       break;
@@ -131,11 +141,26 @@ int main(int argc, char* argv[]) {
       break;
 
     case 'F': /* Archive file */
+#ifdef __CMS
+      fileNameBuffer[0] = 0;
+      for (i++; i < argc && argv[i][0] != '-'; i++) {
+        strncat(fileNameBuffer, " ", FILENAMELEN - strlen(fileNameBuffer)
+          - 1);
+        strncat(fileNameBuffer, argv[i], FILENAMELEN - strlen(fileNameBuffer)
+          - 1);
+      }
+      i--;
+      if (strlen(fileNameBuffer) == 0) {
+        error_and_exit(2, "Missing filename after -f");
+      }
+      archive_file = fileNameBuffer + 1;
+#else
       i++;
       if (i >= argc) {
         error_and_exit(2, "Missing filename after -f");
       }
       archive_file = argv[i];
+#endif
       break;
 
     case 'V': /* Version */
@@ -147,7 +172,7 @@ int main(int argc, char* argv[]) {
       exit(0);
 
     default:
-      error_and_exit(2, "Invalid Arguments");
+      error_and_exit(2, "Invalid argument");
     }
   }
 
@@ -165,7 +190,7 @@ int main(int argc, char* argv[]) {
   return create_archive();
 }
 
-int create_archive() {
+static int create_archive() {
 #ifdef __CMS
   int stackSize;
   int files;
@@ -184,7 +209,7 @@ int create_archive() {
   FILE* outFile;
   char lineBuffer[MAXRECL];
 
-  outFile = fopen(ARCHIVE, "w");
+  outFile = fopen(archive_file, "w");
 
 #ifdef __CMS
   int i;
@@ -223,13 +248,35 @@ int create_archive() {
         inFile = fopen(fileName, "r");
         if (inFile == NULL) {
           printf("ERROR: Can not open file %s\n", fileName);
-          return -1;
+          return 1;
         }
         fprintf(outFile, "+%s\n", toStoredName(fileName));
-
+        int endsInNL = 0;
         while (fgets(lineBuffer, MAXRECL, inFile) != NULL) {
+          if (lineBuffer[strlen(lineBuffer) - 1] == '\n')
+            endsInNL = 1;
+          else
+            endsInNL = 0;
           trimTrailingSpace(lineBuffer);
-          fprintf(outFile, ">%s\n", lineBuffer);
+          char* line = lineBuffer;
+          if (strlen(line) > ARCLINELEN - 1) {
+            fprintf(outFile, ">%.*s\n", ARCLINELEN - 1, line);
+            line += 79;
+            do {
+              if (strlen(line) > 79) {
+                fprintf(outFile, "<%.*s\n", ARCLINELEN - 1, line);
+                line += 79;
+              }
+              else {
+                fprintf(outFile, "<%s\n", line);
+                break;
+              }
+            } while (1);
+          }
+          else fprintf(outFile, ">%s\n", line);
+        }
+        if (endsInNL) {
+          fprintf(outFile, ">\n");
         }
         fclose(inFile);
       }
@@ -247,13 +294,13 @@ int create_archive() {
   closedir(d);
 #endif
 #endif
-
+  fprintf(outFile, "*");
   fclose(outFile);
 
   return 0;
 }
 
-char* validateFileName(char* listFileLine) {
+static char* validateFileName(char* listFileLine) {
   int i;
   /* TODO Check if the file is not a directory */
 
@@ -304,70 +351,145 @@ char* validateFileName(char* listFileLine) {
   return NULL;
 }
 
-int extract_archive() {
+static void writeLineNL(FILE* outFile, char* lineBuffer) {
+  trimTrailingSpace(lineBuffer);
+
+#ifdef __CMS
+  /* This is a work around for a bug in CMSSYS where it does
+     not like writing a line with just a \n */
+  if (strlen(lineBuffer) > 1) {
+    fprintf(outFile, "%s\n", lineBuffer + 1);
+  }
+  else {
+    fputs(" \n", outFile); /* Have to add a space :-( */
+  }
+#else
+  fprintf(outFile, "%s\n", lineBuffer + 1);
+#endif
+}
+
+static void writeLine(FILE* outFile, char* lineBuffer) {
+  trimTrailingSpace(lineBuffer);
+
+#ifdef __CMS
+  /* This is a work around for a bug in CMSSYS where it does
+     not like writing a line with just a \n */
+  if (strlen(lineBuffer) > 1) {
+    fprintf(outFile, "%s", lineBuffer + 1);
+  }
+  else {
+    fputs(" ", outFile); /* Have to add a space :-( */
+  }
+#else
+  fprintf(outFile, "%s", lineBuffer + 1);
+#endif
+}
+
+static int extract_archive() {
+  int lineNo = 0;
   char* fileName;
   FILE* inFile;
   FILE* outFile = NULL;
-  char lineBuffer[MAXRECL];
+  char lineBuffer[MAXRECL + 1];
+  char line[ARCLINELEN + 3]; /* could add /r /n /0 */
+  int needToWriteLine = 0;
+  int startedArchive = 0;
 
-  inFile = fopen(ARCHIVE, "r");
+  inFile = fopen(archive_file, "r");
   if (inFile == NULL) {
-    printf("ERROR: Error opening file %s\n", ARCHIVE);
-    return -1;
+    printf("ERROR: Error opening archive file %s\n", archive_file);
+    return 1;
   }
-  while (fgets(lineBuffer, MAXRECL, inFile) != NULL) {
-    switch (lineBuffer[0]) {
+  while (fgets(line, ARCLINELEN + 3, inFile) != NULL) {
+    trimTrailingNL(line);
+    lineNo++;
+    if (strlen(line) > 80) {
+      if (startedArchive) {
+        if (outFile) {
+          if (needToWriteLine)
+            writeLine(outFile, lineBuffer);
+          fclose(outFile);
+        }
+        fclose(inFile);
+        printf("ERROR: Line %d, Line >80 chars \"%s\"\n", lineNo, line);
+        return 1;
+      }
+    }
+
+    switch (line[0]) {
+    case '*':
+      startedArchive = 1;
+      break;
+
     case '+':
+      startedArchive = 1;
       if (outFile) {
+        if (needToWriteLine) {
+          writeLine(outFile, lineBuffer);
+          needToWriteLine = 0;
+          lineBuffer[0] = 0;
+        }
         fclose(outFile);
       }
-      fileName = fromStoredName(lineBuffer + 1);
+      fileName = fromStoredName(line + 1);
       outFile = fopen(fileName, "w");
       if (outFile == NULL) {
         fclose(inFile);
         printf("ERROR: Error opening file %s\n", fileName);
-        return -1;
+        return 1;
       }
       break;
 
     case '>':
+      startedArchive = 1;
       if (!outFile) {
-        printf("ERROR: Output file not specified on CONCAT file");
+        printf("ERROR: Output file not specified, error in archive file");
         fclose(inFile);
-        return -1;
+        return 1;
       }
-      trimTrailingSpace(lineBuffer);
-#ifdef __CMS
-      /* This is a work around for a bug in CMSSYS where it does
-         not like writing a line with just a \n */
-      if (strlen(lineBuffer) > 1) {
-        fprintf(outFile, "%s\n", lineBuffer + 1);
+      if (needToWriteLine) {
+        writeLineNL(outFile, lineBuffer);
       }
-      else {
-        fputs(" \n", outFile); /* Have to add a space :-( */
+      strncpy(lineBuffer, line, MAXRECL - 1);
+      needToWriteLine = 1;
+      break;
+
+    case '<':
+      startedArchive = 1;
+      if (!needToWriteLine) {
+        printf("ERROR: Append line without a line, error in archive file");
+        fclose(inFile);
+        return 1;
       }
-#else
-      fprintf(outFile, "%s\n", lineBuffer + 1);
-#endif
+      strncat(lineBuffer, line + 1, MAXRECL - strlen(lineBuffer) - 1);
       break;
 
     default:
-      if (outFile) {
-        fclose(outFile);
+      /* Skip any junk before the start */
+      if (startedArchive) {
+        if (outFile) {
+          if (needToWriteLine)
+            writeLine(outFile, lineBuffer);
+          fclose(outFile);
+        }
+        fclose(inFile);
+        printf("ERROR: Line %d, Invalid character in col 0 of \"%s\"\n",
+          lineNo, line);
+        return 1;
       }
-      fclose(inFile);
-      printf("ERROR: Invalid character in col 0\n");
-      return -1;
     }
   }
+
   if (outFile) {
+    if (needToWriteLine)
+      writeLine(outFile, lineBuffer);
     fclose(outFile);
   }
   fclose(inFile);
   return 0;
 }
 
-char* toStoredName(char* fileName) {
+static char* toStoredName(char* fileName) {
 #ifdef __CMS
   static char name[25];
   int i;
@@ -384,7 +506,7 @@ char* toStoredName(char* fileName) {
 #endif
 }
 
-char* fromStoredName(char* fileName) {
+static char* fromStoredName(char* fileName) {
 #ifdef __CMS
   static char name[25];
   int i;
@@ -395,7 +517,6 @@ char* fromStoredName(char* fileName) {
     *ft = 0; ft++;
     break;
   }
-  TrimTrailingSpace(ft);
 
   if (strlen(fn) > 8) fn[8] = 0;
   if (strlen(ft) > 8) ft[8] = 0;
@@ -405,20 +526,19 @@ char* fromStoredName(char* fileName) {
   return name;
 #else
   static char name[100];
-  fileName[strlen(fileName) - 1] = 0; /* Remove new-line */
   snprintf(name, 99, "%s/%s", drive, fileName);
   return name;
 #endif
 }
 
 
-char* trimTrailingSpace(char* str)
+static char* trimTrailingSpace(char* str)
 {
   char* end;
 
   end = str + strlen(str) - 1;
   while (end >= str &&
-    (*end == ' ' || *end == '\n' || *end == '\t')
+    (*end == ' ' || *end == '\n' || *end == '\t' || *end == '\r')
     ) end--;
 
   /* Terminate */
@@ -427,7 +547,21 @@ char* trimTrailingSpace(char* str)
   return str;
 }
 
-char* toUpperString(char* string) {
+static char* trimTrailingNL(char* str)
+{
+  char* end;
+
+  end = str + strlen(str) - 1;
+  while (end >= str && (*end == '\n' || *end == '\r'))
+    end--;
+
+  /* Terminate */
+  end[1] = 0;
+
+  return str;
+}
+
+static char* toUpperString(char* string) {
   int i;
   for (i = 0; string[i]; i++) string[i] = toupper(string[i]);
   return string;
@@ -438,14 +572,14 @@ char* toUpperString(char* string) {
 static const unsigned char lower[] = "abcdefghijklmnopqrstuvwxyz";
 static const unsigned char upper[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
-int toupper(int c) {
+static int toupper(int c) {
   unsigned char* p;
   p = strchr(lower, c);
   if (p) return upper[p - lower];
   return c;
 }
 
-int tolower(int c) {
+static int tolower(int c) {
   unsigned char* p;
   p = strchr(upper, c);
   if (p) return lower[p - upper];
