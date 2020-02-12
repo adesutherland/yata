@@ -3,8 +3,8 @@ YATA - Yay! Another Text Archive
 Adrian Sutherland - adrian@sutherlandonline.org
 
 History 
-
-F0004 - Install Script
+1.1.1 - 12 Feb 2020
+F0004 - CMS Install Script
 
 1.1.0 - 11 Feb 2020
 F0003 - Keep archive line length <=80 characters
