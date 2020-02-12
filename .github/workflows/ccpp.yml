@@ -38,7 +38,7 @@ jobs:
         cp /opt/hercules/vm370/io/yatabin.aws exe
         cp /opt/hercules/vm370/io/LICENSE exe
         cp /opt/hercules/vm370/io/README.md exe
-        cp /opt/hercules/vm370/io/install.sh exe
+        cp /opt/hercules/vm370/io/cmsinstall.sh exe
         cp /opt/hercules/vm370/io/history.txt exe
         chmod -R ugo+r exe
       shell: bash
