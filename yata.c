@@ -17,7 +17,7 @@
 
 #define MAXRECL 800
 #define ARCLINELEN 80
-#define VERSION "1.1.1"
+#define VERSION "1.1.2"
 
 #ifdef __CMS
 
@@ -251,12 +251,7 @@ static int create_archive() {
           return 1;
         }
         fprintf(outFile, "+%s\n", toStoredName(fileName));
-        int endsInNL = 0;
         while (fgets(lineBuffer, MAXRECL, inFile) != NULL) {
-          if (lineBuffer[strlen(lineBuffer) - 1] == '\n')
-            endsInNL = 1;
-          else
-            endsInNL = 0;
           trimTrailingSpace(lineBuffer);
           char* line = lineBuffer;
           if (strlen(line) > ARCLINELEN - 1) {
@@ -275,9 +270,6 @@ static int create_archive() {
           }
           else fprintf(outFile, ">%s\n", line);
         }
-        if (endsInNL) {
-          fprintf(outFile, ">\n");
-        }
         fclose(inFile);
       }
     }
@@ -294,7 +286,7 @@ static int create_archive() {
   closedir(d);
 #endif
 #endif
-  fprintf(outFile, "*");
+  fprintf(outFile, "*\n");
   fclose(outFile);
 
   return 0;
@@ -351,37 +343,20 @@ static char* validateFileName(char* listFileLine) {
   return NULL;
 }
 
-static void writeLineNL(FILE* outFile, char* lineBuffer) {
-  trimTrailingSpace(lineBuffer);
-
-#ifdef __CMS
-  /* This is a work around for a bug in CMSSYS where it does
-     not like writing a line with just a \n */
-  if (strlen(lineBuffer) > 1) {
-    fprintf(outFile, "%s\n", lineBuffer + 1);
-  }
-  else {
-    fputs(" \n", outFile); /* Have to add a space :-( */
-  }
-#else
-  fprintf(outFile, "%s\n", lineBuffer + 1);
-#endif
-}
-
 static void writeLine(FILE* outFile, char* lineBuffer) {
   trimTrailingSpace(lineBuffer);
 
 #ifdef __CMS
   /* This is a work around for a bug in CMSSYS where it does
      not like writing a line with just a \n */
-  if (strlen(lineBuffer) > 1) {
-    fprintf(outFile, "%s", lineBuffer + 1);
+  if (strlen(lineBuffer) > 0) {
+    fprintf(outFile, "%s\n", lineBuffer);
   }
   else {
-    fputs(" ", outFile); /* Have to add a space :-( */
+    fputs(" \n", outFile); /* Have to add a space :-( */
   }
 #else
-  fprintf(outFile, "%s", lineBuffer + 1);
+  fprintf(outFile, "%s\n", lineBuffer);
 #endif
 }
 
@@ -425,7 +400,9 @@ static int extract_archive() {
       startedArchive = 1;
       if (outFile) {
         if (needToWriteLine) {
-          writeLine(outFile, lineBuffer);
+          if (strlen(lineBuffer) > 0) {
+            writeLine(outFile, lineBuffer);
+          }
           needToWriteLine = 0;
           lineBuffer[0] = 0;
         }
@@ -448,9 +425,9 @@ static int extract_archive() {
         return 1;
       }
       if (needToWriteLine) {
-        writeLineNL(outFile, lineBuffer);
+        writeLine(outFile, lineBuffer);
       }
-      strncpy(lineBuffer, line, MAXRECL - 1);
+      strncpy(lineBuffer, line + 1, MAXRECL - 1);
       needToWriteLine = 1;
       break;
 
@@ -481,8 +458,11 @@ static int extract_archive() {
   }
 
   if (outFile) {
-    if (needToWriteLine)
-      writeLine(outFile, lineBuffer);
+    if (needToWriteLine) {
+      if (strlen(lineBuffer) > 0) {
+        writeLine(outFile, lineBuffer);
+      }
+    }
     fclose(outFile);
   }
   fclose(inFile);

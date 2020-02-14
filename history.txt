@@ -3,6 +3,10 @@ YATA - Yay! Another Text Archive
 Adrian Sutherland - adrian@sutherlandonline.org
 
 History 
+1.1.2 - 14 Feb 2020
+F0005 - Supress trailing blank line on CMS yet make
+        sure all lines end in a NL (Linux/Windows)
+
 1.1.1 - 12 Feb 2020
 F0004 - CMS Install Script
 
