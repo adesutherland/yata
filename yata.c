@@ -17,14 +17,14 @@
 
 #define MAXRECL 800
 #define ARCLINELEN 80
-#define VERSION "1.1.2"
+#define VERSION "1.1.3"
 
 #ifdef __CMS
 
 #include <cmssys.h>
 static char* includeTypes[] = { "C", "H", "EXEC", "ASSEMBLE", "LISTING", 
               "COPY", "MACLIB",
-             "MACRO", "PARM", "MEMO" };
+             "MACRO", "PARM", "MEMO", "HELPCMD", "HELPCMD2" };
 #define ARCHIVE "YATA TXT A1"
 #define DRIVE "A"
 static int toupper(int c);
@@ -49,7 +49,7 @@ static char fileNameBuffer[FILENAMELEN];
 #include <ctype.h>
 static char* includeTypes[] = { "c", "h", "exec", "assemble", "listing",
               "copy", "maclib",
-             "macro", "parm", "memo" };
+             "macro", "parm", "memo", "helpcmd", "helpcmd2" };
 #define ARCHIVE "yata.txt"
 #define DRIVE "."
 

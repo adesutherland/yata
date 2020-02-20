@@ -3,8 +3,11 @@ YATA - Yay! Another Text Archive
 Adrian Sutherland - adrian@sutherlandonline.org
 
 History 
+1.1.3 - 20 Feb 2020
+FOOO6 - Added HELPCMD HELPCMD2
+
 1.1.2 - 14 Feb 2020
-F0005 - Supress trailing blank line on CMS yet make
+F0005 - Suppress trailing blank line on CMS yet make
         sure all lines end in a NL (Linux/Windows)
 
 1.1.1 - 12 Feb 2020
