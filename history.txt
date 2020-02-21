@@ -3,6 +3,10 @@ YATA - Yay! Another Text Archive
 Adrian Sutherland - adrian@sutherlandonline.org
 
 History 
+1.2.0 - 21 Feb 2020
+FOOO7 - Link against GCCLIB 0.7.1 / VM370 Image v1.4.0
+
+History 
 1.1.3 - 20 Feb 2020
 FOOO6 - Added HELPCMD HELPCMD2
 
