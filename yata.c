@@ -17,19 +17,16 @@
 
 #define MAXRECL 800
 #define ARCLINELEN 80
-#define VERSION "1.2.0"
+#define VERSION "1.2.1"
 
 #ifdef __CMS
 
 #include <cmssys.h>
 static char* includeTypes[] = { "C", "H", "EXEC", "ASSEMBLE", "LISTING", 
-              "COPY", "MACLIB",
+              "COPY", "MACLIB", "TMPFTYPE",
              "MACRO", "PARM", "MEMO", "HELPCMD", "HELPCMD2" };
 #define ARCHIVE "YATA TXT A1"
 #define DRIVE "A"
-static int toupper(int c);
-static int tolower(int c);
-
 #define FILENAMELEN 25
 static char fileNameBuffer[FILENAMELEN];
 
@@ -48,7 +45,7 @@ static char fileNameBuffer[FILENAMELEN];
 
 #include <ctype.h>
 static char* includeTypes[] = { "c", "h", "exec", "assemble", "listing",
-              "copy", "maclib",
+              "copy", "maclib", "tmpftype",
              "macro", "parm", "memo", "helpcmd", "helpcmd2" };
 #define ARCHIVE "yata.txt"
 #define DRIVE "."
@@ -346,18 +343,7 @@ static char* validateFileName(char* listFileLine) {
 static void writeLine(FILE* outFile, char* lineBuffer) {
   trimTrailingSpace(lineBuffer);
 
-#ifdef __CMS
-  /* This is a work around for a bug in CMSSYS where it does
-     not like writing a line with just a \n */
-  if (strlen(lineBuffer) > 0) {
-    fprintf(outFile, "%s\n", lineBuffer);
-  }
-  else {
-    fputs(" \n", outFile); /* Have to add a space :-( */
-  }
-#else
   fprintf(outFile, "%s\n", lineBuffer);
-#endif
 }
 
 static int extract_archive() {
@@ -546,24 +532,3 @@ static char* toUpperString(char* string) {
   for (i = 0; string[i]; i++) string[i] = toupper(string[i]);
   return string;
 }
-
-#ifdef __CMS
-
-static const unsigned char lower[] = "abcdefghijklmnopqrstuvwxyz";
-static const unsigned char upper[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-
-static int toupper(int c) {
-  unsigned char* p;
-  p = strchr(lower, c);
-  if (p) return upper[p - lower];
-  return c;
-}
-
-static int tolower(int c) {
-  unsigned char* p;
-  p = strchr(upper, c);
-  if (p) return lower[p - upper];
-  return c;
-}
-
-#endif
