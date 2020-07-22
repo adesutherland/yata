@@ -101,7 +101,7 @@ jobs:
       uses: actions/checkout@v2
 
     - name: Run CMAKE
-      uses: lukka/run-cmake@v0.5
+      uses: lukka/run-cmake@v2
       with:
         # Select the build configuration, typically Debug or Release.
         cmakeBuildType: MinSizeRel # optional, default is Debug
