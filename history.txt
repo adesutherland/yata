@@ -3,6 +3,8 @@ YATA - Yay! Another Text Archive
 Adrian Sutherland - adrian@sutherlandonline.org
 
 History 
+1.2.2 - 23 Jul 2020
+        CMS Build fix (wrong version of GCCLIB used in 1.2.1)
 1.2.1 - 22 Jul 2020
 FOOO8 - Link against GCCLIB 0.7.12 / VM370 Image v1.4.17
       - CMS workarounds removed (GCCLIB Updates)
