@@ -3,6 +3,9 @@ YATA - Yay! Another Text Archive
 Adrian Sutherland - adrian@sutherlandonline.org
 
 History 
+1.2.3 - 25 Jul 2020
+F0009 - Performance Improvements
+        Build on "builder" tag
 1.2.2 - 23 Jul 2020
         CMS Build fix (wrong version of GCCLIB used in 1.2.1)
 1.2.1 - 22 Jul 2020

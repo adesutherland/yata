@@ -17,7 +17,7 @@
 
 #define MAXRECL 800
 #define ARCLINELEN 80
-#define VERSION "1.2.1"
+#define VERSION "1.2.3"
 
 #ifdef __CMS
 
@@ -260,12 +260,18 @@ static int create_archive() {
                 line += 79;
               }
               else {
-                fprintf(outFile, "<%s\n", line);
+                fputc('<', outFile);
+                fputs(line, outFile);
+                fputc('\n', outFile);
                 break;
               }
             } while (1);
           }
-          else fprintf(outFile, ">%s\n", line);
+          else {
+            fputc('>', outFile);
+            fputs(line, outFile);
+            fputc('\n', outFile);
+          }
         }
         fclose(inFile);
       }
@@ -342,8 +348,8 @@ static char* validateFileName(char* listFileLine) {
 
 static void writeLine(FILE* outFile, char* lineBuffer) {
   trimTrailingSpace(lineBuffer);
-
-  fprintf(outFile, "%s\n", lineBuffer);
+  fputs(lineBuffer, outFile);
+  fputc('\n', outFile);
 }
 
 static int extract_archive() {
