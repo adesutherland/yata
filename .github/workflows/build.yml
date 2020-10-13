@@ -210,10 +210,10 @@ jobs:
           zip -r YATA-Windows.zip YATA-Windows
 
       - name: Get macos binary
-          uses: actions/download-artifact@v2
-          with:
-            name: YATA-MacOS
-            path: YATA-MacOS
+        uses: actions/download-artifact@v2
+        with:
+          name: YATA-MacOS
+          path: YATA-MacOS
 
       - name: ZIP macos binary
         run:
