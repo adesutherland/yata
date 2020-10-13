@@ -56,7 +56,6 @@ static char* toUpperString(char* string);
 static int create_archive();
 static int extract_archive();
 static char* validateFileName(char* listFileLine);
-static char* getFileName(char* listFileLine);
 static char* toStoredName(char* fileName);
 static char* fromStoredName(char* fileName);
 static char* trimTrailingSpace(char* str);
@@ -92,7 +91,7 @@ static void help() {
 #ifdef __CMS
   helpMessage = toUpperString(helpMessage);
 #endif        
-  printf(helpMessage);
+  printf("%s",helpMessage);
 }
 
 static void error_and_exit(int rc, char* message) {
@@ -535,6 +534,6 @@ static char* trimTrailingNL(char* str)
 
 static char* toUpperString(char* string) {
   int i;
-  for (i = 0; string[i]; i++) string[i] = toupper(string[i]);
+  for (i = 0; string[i]; i++) string[i] = (char)toupper(string[i]);
   return string;
 }
