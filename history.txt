@@ -2,7 +2,12 @@ YATA - Yay! Another Text Archive
 ================================
 Adrian Sutherland - adrian@sutherlandonline.org
 
-History 
+History
+
+1.2.4 - 14 Oct 2020
+F0010 - Update Build Scripts
+      - Added MacOS Target
+
 1.2.3 - 25 Jul 2020
 F0009 - Performance Improvements
         Build on "builder" tag
