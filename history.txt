@@ -4,9 +4,12 @@ Adrian Sutherland - adrian@sutherlandonline.org
 
 History
 
-1.2.4 - 14 Oct 2020
+1.2.4 - 18 Oct 2020
 F0010 - Update Build Scripts
       - Added MacOS Target
+      - Added PEG file type
+      - Removed some minor warnings
+      - Trim (and replace trimmed) white space from archive lines
 
 1.2.3 - 25 Jul 2020
 F0009 - Performance Improvements
