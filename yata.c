@@ -17,13 +17,13 @@
 
 #define MAXRECL 800
 #define ARCLINELEN 80
-#define VERSION "1.2.3"
+#define VERSION "1.2.4"
 
 #ifdef __CMS
 
 #include <cmssys.h>
 static char* includeTypes[] = { "C", "H", "EXEC", "ASSEMBLE", "LISTING", 
-              "COPY", "MACLIB", "TMPFTYPE",
+              "COPY", "MACLIB", "TMPFTYPE", "PEG",
              "MACRO", "PARM", "MEMO", "HELPCMD", "HELPCMD2" };
 #define ARCHIVE "YATA TXT A1"
 #define DRIVE "A"
@@ -45,7 +45,7 @@ static char fileNameBuffer[FILENAMELEN];
 
 #include <ctype.h>
 static char* includeTypes[] = { "c", "h", "exec", "assemble", "listing",
-              "copy", "maclib", "tmpftype",
+              "copy", "maclib", "tmpftype","peg",
              "macro", "parm", "memo", "helpcmd", "helpcmd2" };
 #define ARCHIVE "yata.txt"
 #define DRIVE "."
@@ -56,11 +56,11 @@ static char* toUpperString(char* string);
 static int create_archive();
 static int extract_archive();
 static char* validateFileName(char* listFileLine);
-static char* getFileName(char* listFileLine);
 static char* toStoredName(char* fileName);
 static char* fromStoredName(char* fileName);
 static char* trimTrailingSpace(char* str);
-static char* trimTrailingNL(char* str);
+static char* trimTrailingSpaceAndFixLength(char* str, unsigned int len);
+static char* trimTrailingSpaceWithLength(char* str, unsigned int len);
 
 
 #ifdef _WIN32
@@ -92,7 +92,7 @@ static void help() {
 #ifdef __CMS
   helpMessage = toUpperString(helpMessage);
 #endif        
-  printf(helpMessage);
+  printf("%s",helpMessage);
 }
 
 static void error_and_exit(int rc, char* message) {
@@ -252,10 +252,12 @@ static int create_archive() {
           trimTrailingSpace(lineBuffer);
           char* line = lineBuffer;
           if (strlen(line) > ARCLINELEN - 1) {
+            trimTrailingSpaceWithLength(line,79);
             fprintf(outFile, ">%.*s\n", ARCLINELEN - 1, line);
             line += 79;
             do {
               if (strlen(line) > 79) {
+                trimTrailingSpaceWithLength(line,79);
                 fprintf(outFile, "<%.*s\n", ARCLINELEN - 1, line);
                 line += 79;
               }
@@ -368,8 +370,8 @@ static int extract_archive() {
     return 1;
   }
   while (fgets(line, ARCLINELEN + 3, inFile) != NULL) {
-    trimTrailingNL(line);
     lineNo++;
+    trimTrailingSpace(line);
     if (strlen(line) > 80) {
       if (startedArchive) {
         if (outFile) {
@@ -410,6 +412,7 @@ static int extract_archive() {
       break;
 
     case '>':
+        trimTrailingSpaceAndFixLength(line, 80);
       startedArchive = 1;
       if (!outFile) {
         printf("ERROR: Output file not specified, error in archive file");
@@ -424,6 +427,7 @@ static int extract_archive() {
       break;
 
     case '<':
+        trimTrailingSpaceAndFixLength(line, 80);
       startedArchive = 1;
       if (!needToWriteLine) {
         printf("ERROR: Append line without a line, error in archive file");
@@ -503,38 +507,43 @@ static char* fromStoredName(char* fileName) {
 #endif
 }
 
-
 static char* trimTrailingSpace(char* str)
 {
-  char* end;
-
-  end = str + strlen(str) - 1;
-  while (end >= str &&
-    (*end == ' ' || *end == '\n' || *end == '\t' || *end == '\r')
-    ) end--;
-
-  /* Terminate */
-  end[1] = 0;
-
-  return str;
+    return trimTrailingSpaceWithLength(str,strlen(str));
 }
 
-static char* trimTrailingNL(char* str)
+/* Nulls trailing spaces */
+static char* trimTrailingSpaceWithLength(char* str, unsigned int len)
 {
-  char* end;
+    char* end;
 
-  end = str + strlen(str) - 1;
-  while (end >= str && (*end == '\n' || *end == '\r'))
-    end--;
+    end = str + len - 1;
+    while ( end >= str &&
+          (*end == 0 || *end == ' ' || *end == '\n' ||
+           *end == '\t' || *end == '\r') ) {
+        *end = 0;
+        end--;
+    }
 
-  /* Terminate */
-  end[1] = 0;
+    return str;
+}
 
-  return str;
+static char* trimTrailingSpaceAndFixLength(char* str, unsigned int len)
+{
+    unsigned int l, i;
+
+    trimTrailingSpaceWithLength(str,strlen(str));
+
+    /* Add spaces so the line is len chars long */
+    l = strlen(str);
+    for (i=l; i<len; i++) str[i] = ' ';
+    str[i] = 0;
+
+    return str;
 }
 
 static char* toUpperString(char* string) {
   int i;
-  for (i = 0; string[i]; i++) string[i] = toupper(string[i]);
+  for (i = 0; string[i]; i++) string[i] = (char)toupper(string[i]);
   return string;
 }
