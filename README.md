@@ -31,7 +31,7 @@ The first character is a line control character
 
 - Archive End (*)
 
-    *
+    \*
 
 Trailing spaces are removed. On CMS flies will need to have recfm / lrecl reset (which I don't see as an issue)
 
