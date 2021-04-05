@@ -17,15 +17,16 @@
 
 #define MAXRECL 800
 #define ARCLINELEN 80
-#define VERSION "1.2.4"
+/* #define VERSION "1.2.4" */
+#define VERSION "F0011"
 
 #ifdef __CMS
 
 #include <cmssys.h>
 static char* includeTypes[] = { "C", "H", "EXEC", "ASSEMBLE", "LISTING", 
-              "COPY", "MACLIB", "TMPFTYPE", "PEG",
+              "COPY", "MACLIB", "TMPFTYPE", "PEG", "RXAS", "Y", "RE", "TXT",
              "MACRO", "PARM", "MEMO", "HELPCMD", "HELPCMD2" };
-#define ARCHIVE "YATA TXT A1"
+#define ARCHIVE "ARCHIVE YATA A1"
 #define DRIVE "A"
 #define FILENAMELEN 25
 static char fileNameBuffer[FILENAMELEN];
@@ -45,9 +46,9 @@ static char fileNameBuffer[FILENAMELEN];
 
 #include <ctype.h>
 static char* includeTypes[] = { "c", "h", "exec", "assemble", "listing",
-              "copy", "maclib", "tmpftype","peg",
+              "copy", "maclib", "tmpftype","peg", "rxas", "y", "re", "txt",
              "macro", "parm", "memo", "helpcmd", "helpcmd2" };
-#define ARCHIVE "yata.txt"
+#define ARCHIVE "archive.yata"
 #define DRIVE "."
 
 #endif
@@ -87,7 +88,7 @@ static void help() {
     "  -c        Create Archive\n"
     "  -d TEXT   Drive or Directory of files (default: A in CMS,"
     " . in Windows/Linux)\n"
-    "  -f TEXT   Archive file (default: yata.txt)\n";
+    "  -f TEXT   Archive file (default: archive.yata)\n";
 
 #ifdef __CMS
   helpMessage = toUpperString(helpMessage);
@@ -211,6 +212,7 @@ static int create_archive() {
 #ifdef __CMS
   int i;
   char command[40];
+  setbuf(outFile, 0); /* Disables te overhead of the random r/w cache */
   stackSize = CMSstackQuery();
   sprintf(command, "LISTFILE * * %s (FORMAT STACK", drive);
   CMScommand(command, CMS_COMMAND);
@@ -247,6 +249,9 @@ static int create_archive() {
           printf("ERROR: Can not open file %s\n", fileName);
           return 1;
         }
+#ifdef __CMS
+        setbuf(inFile, 0); /* Disables te overhead of the random r/w cache */
+#endif
         fprintf(outFile, "+%s\n", toStoredName(fileName));
         while (fgets(lineBuffer, MAXRECL, inFile) != NULL) {
           trimTrailingSpace(lineBuffer);
@@ -369,7 +374,10 @@ static int extract_archive() {
     printf("ERROR: Error opening archive file %s\n", archive_file);
     return 1;
   }
-  while (fgets(line, ARCLINELEN + 3, inFile) != NULL) {
+#ifdef __CMS
+    setbuf(inFile, 0); /* Disables te overhead of the random r/w cache */
+#endif
+    while (fgets(line, ARCLINELEN + 3, inFile) != NULL) {
     lineNo++;
     trimTrailingSpace(line);
     if (strlen(line) > 80) {
@@ -409,6 +417,9 @@ static int extract_archive() {
         printf("ERROR: Error opening file %s\n", fileName);
         return 1;
       }
+#ifdef __CMS
+      setbuf(outFile, 0); /* Disables te overhead of the random r/w cache */
+#endif
       break;
 
     case '>':
