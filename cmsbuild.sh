@@ -11,7 +11,7 @@ herccontrol "/cp start c" -w "RDR"
 
 # LOGON CMSUSER
 herccontrol "/cp disc" -w "^VM/370 Online"
-herccontrol "/logon cmsuser cmsuser" -w "^CMS VERSION"
+herccontrol "/logon cmsuser cmsuser" -w "^CMS"
 herccontrol "/" -w "^Ready;"
 
 # Read MAKE EXEC
@@ -34,10 +34,10 @@ herccontrol -w "HHCRD012I" -f $mark
 herccontrol "/" -w "RDR FILE"
 herccontrol "/read *" -w "^Ready;"
 
-# Read YATA TXT (for testing)
+# Read ARCHIVE YATA (for testing)
 herccontrol -m >tmp; read mark <tmp; rm tmp
-echo "USERID  CMSUSER\n:READ  YATA     TXT     " > tmp
-cat test/yata.txt >> tmp
+echo "USERID  CMSUSER\n:READ  ARCHIVE  YATA    " > tmp
+cat test/archive.yata >> tmp
 netcat -q 0 localhost 3505 < tmp
 rm tmp
 herccontrol -w "HHCRD012I" -f $mark 

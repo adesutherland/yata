@@ -1,5 +1,13 @@
 #!/bin/sh
+# **************************************************************************
+# * THIS FILE IS DEPRECATED and is not designed to work on the VM/370 CE ***
+# * Going forward installation is a responsibility of the distribution not *
+# * of the package provider                                                *
+# **************************************************************************
+#
 # Install YATA on CMS
+#
+
 
 # Exit if there is an error
 set -e
