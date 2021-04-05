@@ -4,6 +4,7 @@ Adrian Sutherland - adrian@sutherlandonline.org
 
 History
 
+1.2.5 - 5 April 2021
 F0011 - VM/370 CE Support - Specifically CMSINSTALL is deprecated and the
                             binary file just has the "statically" linked
                             module. Simplify ...
