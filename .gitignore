@@ -52,3 +52,5 @@ Mkfile.old
 dkms.conf
 /.vs
 /out/build
+.idea
+cmake-build-debug

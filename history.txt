@@ -4,6 +4,14 @@ Adrian Sutherland - adrian@sutherlandonline.org
 
 History
 
+1.2.5 - 5 April 2021
+F0011 - VM/370 CE Support - Specifically CMSINSTALL is deprecated and the
+                            binary file just has the "statically" linked
+                            module. Simplify ...
+        CMS - Disable Random R/W Buffer
+        Default Archive renamed to archive.yata
+        .gitignore updated for CLION
+
 1.2.4 - 18 Oct 2020
 F0010 - Update Build Scripts
       - Added MacOS Target

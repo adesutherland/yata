@@ -9,7 +9,7 @@ Lightweight tool to archive text files - designed to help move files between VM/
       -x        Extract from Archive
       -c        Create Archive
       -d TEXT   Drive or Directory of files (default: A in CMS, . in Windows/Linux)
-      -f TEXT   Archive file (default: yata.txt)
+      -f TEXT   Archive file (default: archive.yata)
 
 # YATA Archive file format
 The format is trivial. The YATA archive file is text based, variable length lines up to 80 characters (so it can go through punch card files). 
@@ -31,7 +31,7 @@ The first character is a line control character
 
 - Archive End (*)
 
-    *
+    \*
 
 Trailing spaces are removed. On CMS flies will need to have recfm / lrecl reset (which I don't see as an issue)
 
